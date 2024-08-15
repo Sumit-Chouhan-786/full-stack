@@ -62,6 +62,9 @@ const Login = () => {
         <Link to="/admin/signup">
           Don't have an account? <span className="text-blue-500">Sign Up</span>
         </Link>
+        <Link to="/admin/adminUpdate">
+          <span className="text-blue-500">Forgot Password?</span>
+        </Link>
         <button
           className="bg-blue-500 p-2 rounded-lg text-white"
           onClick={handleSubmit}

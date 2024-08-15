@@ -1,31 +1,23 @@
-import axios from "axios";
-import React, { useState } from "react";
+// ProductCard.jsx
+import React from "react";
 
-const PurchaseProduct = () => {
-  const [products, setProducts] = useState([]);
-  axios
-    .get("http://localhost:5000/purchaseProduct")
-    .then((res) => {
-      setProducts(res.data);
-    })
-    .catch((err) => {
-      console.log(err);
-    });
+const PurchaseProduct = ({ product, onPurchase }) => {
   return (
-    <>
-      <h1>PurchaseProduct</h1>
-      <div className="flex flex-wrap">
-        <div className="w-4/12 px-3">
-          {products.map((product) => (
-            <div className="bg-gray-200 rounded-md w-full flex flex-col justify-center items-center">
-              <h3>{product.name}</h3>
-              <p>{product.price}</p>
-              <button ></button>
-            </div>
-          ))}
-        </div>
+    <div className="md:w-4/12 sm:w-1/2 w-full px-3 pb-4" key={product._id}>
+      <div className="bg-gray-200 rounded-md w-full flex flex-col justify-center items-center">
+        <h3>{product.name}</h3>
+        <p>{product.description}</p>
+        <p>{product.price}</p>
+        {onPurchase && (
+          <button
+            className="bg-gray-400 rounded-md px-3 py-1 my-3"
+            onClick={() => onPurchase(product)}
+          >
+            Purchase
+          </button>
+        )}
       </div>
-    </>
+    </div>
   );
 };
 

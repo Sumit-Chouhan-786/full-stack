@@ -14,7 +14,7 @@ const SignUp = () => {
     }
 
     axios
-      .post("http://localhost:4000/signup", {
+      .post("http://localhost:4000//user/signup", {
         name: name,
         email: email,
         password: password,

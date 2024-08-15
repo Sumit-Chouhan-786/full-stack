@@ -38,7 +38,7 @@ const Admin = mongoose.model("Admin", userSchema);
 const Product = mongoose.model("Product", productSchema);
 
 // User Signup
-app.post("/signup", (req, res) => {
+app.post("/user/signup", (req, res) => {
   const { name, email, password } = req.body;
   const user = new User({ name, email, password });
 
@@ -73,7 +73,7 @@ app.post("/userLogin", async (req, res) => {
 });
 
 // Update User Password
-app.put("/userUpdate", async (req, res) => {
+app.put("/user/userUpdate", async (req, res) => {
   const { email, newPassword } = req.body;
 
   try {
@@ -91,11 +91,28 @@ app.put("/userUpdate", async (req, res) => {
 });
 
 app.post("/user/purchase", async (req, res) => {
-  const { email, productId } = req.body;
-  const user = await User.findOne({ email });
-  user.purchase.push(productId);
-  await user.save();
-  res.status(200).json({ message: "Product purchased successfully" });
+  try {
+    const { email, productId } = req.body;
+
+    // Find the user by email
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Add the productId to the purchase array
+    user.purchase.push(productId);
+
+    // Save the updated user
+    await user.save();
+
+    res.status(200).json({ message: "Product purchased successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
 });
 
 app.post("/user/complete", async (req, res) => {
@@ -124,7 +141,7 @@ app.post("/products", (req, res) => {
     });
 });
 
-app.get("/allProducts", async (req, res) => {
+app.get("/user/userLogin/allProducts", async (req, res) => {
   try {
     const products = await Product.find();
     if (!products.length) {
@@ -137,14 +154,54 @@ app.get("/allProducts", async (req, res) => {
 });
 
 app.post("/purchaseProduct", async (req, res) => {
+  console.log("Request received:", req.body); // Add this for logging
   const { email, productId } = req.body;
-  const user = await User.findOne({ email }).then((data)=>{
-    console.log(err);
-    data.purchase.push(productId);
-    data.save();
-  });
-  res.status(200).json({ message: "Product purchased successfully" });
+  try {
+    const user = await User.findOne({ email });
+    if (user) {
+      user.purchase.push(productId);
+      await user.save();
+      return res
+        .status(200)
+        .json({ message: "Product purchased successfully" });
+    } else {
+      return res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Internal Server Error", error: error.message });
+  }
 });
+
+// Fetch purchased products for a specific user
+app.get("/user/purchasedProducts", async (req, res) => {
+  const { email } = req.query; // Get email from query params
+  
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
+  }
+  
+  try {
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    // Fetch products based on IDs in the user's purchase array
+    const purchasedProducts = await Product.find({ _id: { $in: user.purchase } });
+    
+    if (!purchasedProducts.length) {
+      return res.status(404).json({ message: "No purchased products found" });
+    }
+    
+    res.json(purchasedProducts);
+  } catch (error) {
+    res.status(500).json({ message: "Server Error", error });
+  }
+});
+
 
 
 // Admin Signup
@@ -179,6 +236,24 @@ app.post("/admin/login", async (req, res) => {
     res.status(200).json({ message: "Login Successful", email: admin.email });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Update User Password
+app.put("/admin/adminUpdate", async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  try {
+    const admin = await User.findOne({ email });
+    if (!admin) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    admin.password = newPassword;
+    await admin.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
   }
 });
 
